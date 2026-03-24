@@ -441,7 +441,9 @@ See [`docs/`](docs/) for the full design documentation, and [`AGENT-0-MUST-READ.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+**Personal use only.** Free to use, modify, and run for personal and non-commercial purposes. Commercial use (products, services, internal business tooling, SaaS, consulting) requires explicit written permission.
+
+See [LICENSE](LICENSE) for full terms. For commercial licensing, open an issue.
 
 ---
 
