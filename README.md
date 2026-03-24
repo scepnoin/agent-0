@@ -182,18 +182,38 @@ npx tauri build
 
 Agent-0 exposes itself as an MCP server on `localhost:7801`. Any MCP-compatible tool connects to it directly.
 
-### Claude Code
+> **Full integration guide:** [`docs/28_WORKING_WITH_AGENT0.md`](docs/28_WORKING_WITH_AGENT0.md)
 
-Add to your project's `CLAUDE.md`:
+### Step 1 — Add to your CLAUDE.md (copy-paste this)
+
+Create or update `CLAUDE.md` in your project root:
+
 ```markdown
-## Agent-0 Context
-Before starting any work, call Agent-0 for full project context:
-- MCP server: localhost:7801
-- Tool: `agent0_brief` — get current state, recent changes, active gospels
-- Tool: `agent0_query` — ask any question about the project
+## Agent-0 — Project Oracle
+
+Agent-0 is running and watching this project. It knows everything.
+**Always call it first before starting any work.**
+
+MCP server: localhost:7801
+REST API: localhost:7800
+
+### Session Start (REQUIRED)
+Before doing anything else:
+POST http://localhost:7800/brief
+Read the response fully — it contains current state, recent changes,
+open issues, active gospel rules, and any pending reminders.
+
+### Before Touching Critical Files
+POST http://localhost:7800/query
+{"question": "What should I know before changing [filename]?"}
+
+### When You Finish a Task
+Update ACTIVE_WORK.md with what you did. Agent-0 watches it.
 ```
 
-Or configure in `.claude/settings.json`:
+### Step 2 — Configure MCP in your tool
+
+**.claude/settings.json:**
 ```json
 {
   "mcpServers": {
@@ -204,26 +224,38 @@ Or configure in `.claude/settings.json`:
 }
 ```
 
-### Available MCP Tools
+### The 4 MCP Tools
 
-| Tool | Description |
-|------|-------------|
-| `agent0_brief` | Full handoff brief — state, recent changes, open items, active gospels |
-| `agent0_query` | Free-form question answered from accumulated knowledge |
-| `agent0_state` | Raw current state (state/current.md) |
-| `agent0_gospels` | All active gospel rules for the project |
+| Tool | When to use | What you get |
+|------|-------------|-------------|
+| `agent0_brief` | **Session start — always** | Full context: state, recent changes, open issues, gospels |
+| `agent0_query` | Any question about the project | Synthesized answer from full knowledge base |
+| `agent0_state` | Quick state check | Raw current state |
+| `agent0_gospels` | Before significant changes | All active rules derived from your codebase |
+
+### What a session looks like
+
+```
+Session starts
+  → agent0_brief()
+  → "Phase 3 active. Last 3 changes: X, Y, Z.
+     Gospel warning: config.py has 155 dependents.
+     Open issues: I-12 (auth bug), I-15 (race condition).
+     Reminder: ACTIVE_WORK.md is stale."
+
+Before touching config.py
+  → agent0_query("What should I know before changing config.py?")
+  → "155 dependents. Last change caused regression W-34.
+     Gospel G-07: run full test suite after any config change."
+
+After finishing task
+  → Update ACTIVE_WORK.md
+  → Agent-0 watches it, logs intent vs. outcome automatically
+```
 
 ### Why This Matters
 
-Every AI tool that connects gets the same knowledge. Switch from Claude Code to Cursor mid-session — Agent-0 is the constant. No context lost between tools or sessions.
-
-```
-New Claude Code session → calls agent0_brief → gets full context instantly
-                                                 ↓
-                       "You're on Phase 3. Last 3 changes: X, Y, Z.
-                        30 gospel rules active. 12 open issues.
-                        Warning: config.py has 155 dependents."
-```
+Every AI tool that connects gets the same knowledge. Switch from Claude Code to Cursor mid-session — Agent-0 is the constant. No context lost between tools or sessions. The new session calls `agent0_brief` and is fully caught up in seconds.
 
 ---
 
